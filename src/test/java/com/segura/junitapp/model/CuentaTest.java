@@ -18,7 +18,7 @@ class CuentaTest {
 
 	@Test
 	void testName() throws Exception {
-		Cuenta cuenta = new Cuenta("Lopez f", new BigDecimal("100.12345"));
+		Cuenta cuenta = new Cuenta("Lopez", new BigDecimal("100.12345"));
 		// cuenta.setPersona("Lopez");
 
 		String esperado = "Lopez";
