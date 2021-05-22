@@ -1,5 +1,6 @@
 package com.segura.junitapp.model;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -17,14 +18,19 @@ class CuentaTest {
 
 	@Test
 	void testName() throws Exception {
-		Cuenta cuenta = new Cuenta("Lopez", new BigDecimal("100.12345"));
+		Cuenta cuenta = new Cuenta("Lopez f", new BigDecimal("100.12345"));
 		// cuenta.setPersona("Lopez");
 
 		String esperado = "Lopez";
 		String realidad = cuenta.getPersona();
-		assertNotNull(realidad);
-		assertEquals(esperado, realidad);
-		assertTrue(realidad.equals("Lopez"));
+		// Usamos expresiones lambdas para mejorar el rendimiento al crear los
+		// mensajes personalizados de cada caso, de esta manera unicamente se
+		// instanciara el mensaje cuando la prueba falle
+		assertNotNull(realidad, () -> "La cuenta no puede ser nula");
+		assertEquals(esperado, realidad,
+				() -> "El nombre de la cuenta no es el que se esperaba");
+		assertTrue(realidad.equals("Lopez"),
+				() -> "Nombre cuenta esperado debe ser igual al real");
 	}
 
 	@Test
@@ -85,4 +91,68 @@ class CuentaTest {
 
 		assertEquals(esperado, actual);
 	}
+
+	@Test
+	void testTransferirDineroCuenta() throws Exception {
+		Cuenta cuenta1 = new Cuenta("Guzman", new BigDecimal("2500"));
+		Cuenta cuenta2 = new Cuenta("Pepe", new BigDecimal("1500.2500"));
+
+		Banco banco = new Banco();
+		banco.setName("Banco del Estado");
+
+		banco.transferir(cuenta1, cuenta2, new BigDecimal("500"));
+
+		assertEquals("2000", cuenta1.getSalario().toPlainString());
+		assertEquals("2000.2500", cuenta2.getSalario().toPlainString());
+
+	}
+
+	@Test
+	void testRelacionBancoCuentas() throws Exception {
+		Cuenta cuenta1 = new Cuenta("Guzman", new BigDecimal("2500"));
+		Cuenta cuenta2 = new Cuenta("Pepe", new BigDecimal("1500.2500"));
+
+		Banco banco = new Banco();
+		banco.addCuentas(cuenta1);
+		banco.addCuentas(cuenta2);
+
+		banco.setName("Banco del Estado");
+
+		banco.transferir(cuenta1, cuenta2, new BigDecimal("500"));
+		assertAll(() -> {
+			assertEquals("2000", cuenta1.getSalario().toPlainString(),
+					() -> "El valor del salario de la cuenta1 no es el que se esperaba");
+		}, () -> {
+			assertEquals("2000.2500", cuenta2.getSalario().toPlainString(),
+					() -> "El valor del salario de la cuenta2 no es el que se esperaba");
+		}, () -> {
+			assertEquals(2, banco.getCuentas().size(),
+					() -> "El banco no tiene las cuentas esperadas");
+
+		}, () -> {
+			assertEquals("Banco del Estado", cuenta1.getBanco().getName());
+
+		}, () -> {
+			// Evaluamos si el usuario existe dentro de la lista de las cuentas
+			// de
+			// banco (relacion inversa entre clase banco y cuenta)
+
+			assertEquals("Guzman",
+					banco.getCuentas().stream()
+							.filter(c -> c.getPersona().equals("Guzman"))
+							.findFirst().get().getPersona());
+		}, () -> {
+			// Forma usando assrtTrue
+			assertTrue(banco.getCuentas().stream()
+					.filter(c -> c.getPersona().equals("Guzman")).findFirst()
+					.isPresent());
+
+		}, () -> {
+			// Forma mas simple
+			assertTrue(banco.getCuentas().stream()
+					.anyMatch(c -> c.getPersona().equals("Guzman")));
+		});
+
+	}
+
 }

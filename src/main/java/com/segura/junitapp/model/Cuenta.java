@@ -10,6 +10,7 @@ import lombok.Data;
 public class Cuenta {
 	private String persona;
 	private BigDecimal salario;
+	private Banco banco;
 
 	public Cuenta(String persona, BigDecimal saldo) {
 		this.salario = saldo;
